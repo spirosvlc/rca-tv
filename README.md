@@ -70,7 +70,7 @@ rca-project/
 
 ```bash
 git clone https://github.com/spirosvlc/rca-tv
-cd rca-project
+cd rca-tv
 
 python3 -m venv .venv
 source .venv/bin/activate
