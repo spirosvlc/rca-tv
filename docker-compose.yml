@@ -1,0 +1,12 @@
+services:
+  rca:
+    build: .
+    container_name: rca-project
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/opt/rca/data
+      - ./media:/media/rca
+    env_file:
+      - .env
+    restart: unless-stopped

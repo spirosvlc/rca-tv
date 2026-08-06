@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RCA Project</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+</head>
+<body class="player-body">
+  <main id="tv">
+    <video id="video" autoplay playsinline></video>
+    <div class="scanlines"></div>
+    <div id="static" class="static hidden"></div>
+
+    <div id="channelBug" class="channel-bug hidden">
+      <strong id="channelNumber"></strong>
+      <span id="channelName"></span>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      <h1>RCA</h1>
+      <p>No channels configured.</p>
+      <a href="/admin">Open setup</a>
+    </div>
+
+    <section id="mediumAlert" class="alert medium hidden">
+      <span class="alert-label">RCA INFORMATION</span>
+      <span class="alert-message"></span>
+    </section>
+
+    <section id="seriousAlert" class="alert serious hidden">
+      <div>
+        <span class="alert-label">IMPORTANT NOTICE</span>
+        <p class="alert-message"></p>
+        <small>Press OK to dismiss</small>
+      </div>
+    </section>
+
+    <section id="criticalAlert" class="alert critical hidden">
+      <div class="critical-card">
+        <div class="critical-symbol">!</div>
+        <span class="alert-label">EMERGENCY BROADCAST</span>
+        <p class="alert-message"></p>
+        <small>Press OK to continue</small>
+      </div>
+    </section>
+  </main>
+  <script src="/static/player.js"></script>
+</body>
+</html>

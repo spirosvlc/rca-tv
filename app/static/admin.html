@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RCA Setup</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div>
+      <span class="eyebrow">RCA PROJECT</span>
+      <h1>Broadcast control</h1>
+    </div>
+    <a class="button secondary" href="/">Open television</a>
+  </header>
+
+  <main class="admin-grid">
+    <section class="panel">
+      <h2>Add channel</h2>
+      <form id="channelForm">
+        <div class="row">
+          <label>Channel number
+            <input name="number" type="number" min="1" required>
+          </label>
+          <label>Name
+            <input name="name" required placeholder="Cartoon Network">
+          </label>
+        </div>
+
+        <label>Source type
+          <select name="source_type">
+            <option value="folder">Local folder</option>
+            <option value="m3u">M3U URL</option>
+          </select>
+        </label>
+
+        <label>Folder path or M3U URL
+          <input name="source" required placeholder="/media/rca/cartoons">
+        </label>
+
+        <label>Logo URL
+          <input name="logo_url" placeholder="Optional">
+        </label>
+
+        <button class="button" type="submit">Add and scan</button>
+        <p id="channelStatus" class="status"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Channels</h2>
+      <div id="channels" class="channel-list"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Test emergency broadcast</h2>
+      <form id="alertForm">
+        <label>Level
+          <select name="level">
+            <option value="medium">Medium — lower third</option>
+            <option value="serious">Serious — modal</option>
+            <option value="critical">Critical — full takeover + tone</option>
+          </select>
+        </label>
+
+        <label>Message
+          <textarea name="message" required></textarea>
+        </label>
+
+        <button class="button" type="submit">Broadcast</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Telegram and weather</h2>
+      <form id="settingsForm">
+        <label class="check">
+          <input name="telegram_enabled" type="checkbox">
+          Enable Telegram bot
+        </label>
+
+        <label>Telegram bot token
+          <input name="telegram_token" type="password" autocomplete="off">
+        </label>
+
+        <label>Allowed Telegram chat ID
+          <input name="telegram_chat_id">
+        </label>
+
+        <div class="divider"></div>
+
+        <label>Weather provider
+          <select name="weather_provider">
+            <option value="open-meteo">Open-Meteo</option>
+            <option value="emy">EMY adapter — future</option>
+          </select>
+        </label>
+
+        <div class="row">
+          <label>Latitude<input name="weather_latitude"></label>
+          <label>Longitude<input name="weather_longitude"></label>
+        </div>
+
+        <label>Refresh every (minutes)
+          <input name="weather_refresh_minutes" type="number" min="5" value="15">
+        </label>
+
+        <button class="button" type="submit">Save configuration</button>
+        <p id="settingsStatus" class="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="/static/admin.js"></script>
+</body>
+</html>
