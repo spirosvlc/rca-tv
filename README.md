@@ -166,7 +166,7 @@ Use only video files and streams you own or are authorized to access. Do not dis
 The player supports standard browser keys and common Smart TV key codes for:
 
 - Channel up/down
-- OK/Enter to dismiss active alerts
+- OK/Enter or 0 (zero key) to dismiss active alerts
 - Volume up/down
 - Mute/unmute
 - Back/Return to dismiss active alerts
