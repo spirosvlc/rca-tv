@@ -10,6 +10,7 @@ class RCAPlayer {
     this.controlIcon = document.querySelector("#controlIcon");
     this.controlLabel = document.querySelector("#controlLabel");
     this.volumeMeterFill = document.querySelector("#volumeMeterFill");
+    this.keyDebug = document.querySelector("#keyDebug");
 
     this.channels = [];
     this.currentChannelIndex = 0;
@@ -20,6 +21,7 @@ class RCAPlayer {
     this.previousVolume = 1;
     this.hasUserInteraction = false;
     this.osdTimer = null;
+    this.keyDebugTimer = null;
 
     // Browsers permit reliable autoplay when media starts muted.
     this.video.muted = true;
@@ -65,47 +67,110 @@ class RCAPlayer {
 
   handleKey(event) {
     this.registerUserInteraction();
+    this.showKeyDebug(event);
+
+    const key = event.key || "";
+    const code = event.code || "";
+    const keyCode = event.keyCode || event.which || 0;
+
+    const nextChannelKeys = new Set([
+      "ArrowUp",
+      "PageUp",
+      "ChannelUp",
+      "MediaTrackNext",
+      "TVChannelUp",
+    ]);
+
+    const previousChannelKeys = new Set([
+      "ArrowDown",
+      "PageDown",
+      "ChannelDown",
+      "MediaTrackPrevious",
+      "TVChannelDown",
+    ]);
+
+    // Common Smart TV browser key codes:
+    // Samsung/Tizen and several embedded browsers may expose 427/428.
+    // Some remotes expose PageUp/PageDown as 33/34.
+    const nextChannelCodes = new Set([33, 427]);
+    const previousChannelCodes = new Set([34, 428]);
 
     if (
       this.activeAlert &&
-      ["Enter", "Escape", " "].includes(event.key)
+      (
+        ["Enter", "Escape", " ", "Back", "BrowserBack"].includes(key) ||
+        [13, 27, 10009, 461].includes(keyCode)
+      )
     ) {
+      event.preventDefault();
       this.dismissAlert();
       return;
     }
 
-    if (["ArrowUp", "PageUp"].includes(event.key)) {
+    if (
+      nextChannelKeys.has(key) ||
+      nextChannelCodes.has(keyCode)
+    ) {
+      event.preventDefault();
       this.tune(this.currentChannelIndex + 1);
-    }
-
-    if (["ArrowDown", "PageDown"].includes(event.key)) {
-      this.tune(this.currentChannelIndex - 1);
+      return;
     }
 
     if (
-      ["ArrowRight", "AudioVolumeUp", "+", "="].includes(event.key)
+      previousChannelKeys.has(key) ||
+      previousChannelCodes.has(keyCode)
+    ) {
+      event.preventDefault();
+      this.tune(this.currentChannelIndex - 1);
+      return;
+    }
+
+    if (
+      ["ArrowRight", "AudioVolumeUp", "+", "="].includes(key) ||
+      [175, 447].includes(keyCode)
     ) {
       event.preventDefault();
       this.changeVolume(0.1);
+      return;
     }
 
     if (
-      ["ArrowLeft", "AudioVolumeDown", "-", "_"].includes(event.key)
+      ["ArrowLeft", "AudioVolumeDown", "-", "_"].includes(key) ||
+      [174, 448].includes(keyCode)
     ) {
       event.preventDefault();
       this.changeVolume(-0.1);
+      return;
     }
 
     if (
-      ["AudioVolumeMute", "m", "M"].includes(event.key)
+      ["AudioVolumeMute", "m", "M"].includes(key) ||
+      [173, 449].includes(keyCode)
     ) {
       event.preventDefault();
       this.toggleMute();
+      return;
     }
 
-    if (event.key.toLowerCase() === "f") {
+    if (key.toLowerCase() === "f") {
       document.documentElement.requestFullscreen?.();
     }
+  }
+
+  showKeyDebug(event) {
+    const key = event.key || "unknown";
+    const code = event.code || "none";
+    const keyCode = event.keyCode || event.which || 0;
+
+    this.keyDebug.textContent =
+      `KEY ${key} · CODE ${code} · ${keyCode}`;
+    this.keyDebug.classList.remove("hidden");
+
+    window.clearTimeout(this.keyDebugTimer);
+    this.keyDebugTimer = window.setTimeout(
+      () => this.keyDebug.classList.add("hidden"),
+      2000,
+    );
   }
 
   registerUserInteraction() {

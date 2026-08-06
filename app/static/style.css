@@ -284,3 +284,23 @@ textarea { min-height: 110px; resize: vertical; }
     grid-template-columns: 1fr;
   }
 }
+
+
+.key-debug {
+  position: absolute;
+  z-index: 50;
+  top: 2vh;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 92vw;
+  padding: 8px 12px;
+  color: #7dff65;
+  background: rgba(0, 20, 0, .88);
+  border: 2px solid #7dff65;
+  font-family: "Courier New", monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-align: center;
+  text-shadow: 0 0 7px rgba(125, 255, 101, .8);
+}
