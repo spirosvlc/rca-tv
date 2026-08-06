@@ -67,7 +67,7 @@ rca-project/
 ## Local setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/rca-project.git
+git clone https://github.com/spirosvlc/rca-tv
 cd rca-project
 
 python3 -m venv .venv
