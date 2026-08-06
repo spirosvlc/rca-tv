@@ -69,7 +69,7 @@ rca-project/
 ## Local setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/rca-project.git
+git clone https://github.com/spirosvlc/rca-tv
 cd rca-project
 
 python3 -m venv .venv
@@ -160,3 +160,15 @@ See `deploy/README_PI.md`.
 ## Copyright
 
 Use only video files and streams you own or are authorized to access. Do not distribute copyrighted media with this repository.
+
+### Smart TV remote behavior
+
+The player supports standard browser keys and common Smart TV key codes for:
+
+- Channel up/down
+- OK/Enter to dismiss active alerts
+- Volume up/down
+- Mute/unmute
+- Back/Return to dismiss active alerts
+
+The green key diagnostic at the top displays the key value received from the TV browser. Some television operating systems may still reserve physical volume keys for the TV's global speaker volume before the browser receives them.

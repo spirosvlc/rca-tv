@@ -89,21 +89,100 @@ class RCAPlayer {
       "TVChannelDown",
     ]);
 
-    // Common Smart TV browser key codes:
-    // Samsung/Tizen and several embedded browsers may expose 427/428.
-    // Some remotes expose PageUp/PageDown as 33/34.
+    const okKeys = new Set([
+      "Enter",
+      "Accept",
+      "Select",
+      "OK",
+      "MediaPlayPause",
+      "0",
+    ]);
+
+    const backKeys = new Set([
+      "Escape",
+      "Back",
+      "BrowserBack",
+      "GoBack",
+      "Exit",
+    ]);
+
+    const volumeUpKeys = new Set([
+      "ArrowRight",
+      "AudioVolumeUp",
+      "VolumeUp",
+      "+",
+      "=",
+    ]);
+
+    const volumeDownKeys = new Set([
+      "ArrowLeft",
+      "AudioVolumeDown",
+      "VolumeDown",
+      "-",
+      "_",
+    ]);
+
+    const muteKeys = new Set([
+      "AudioVolumeMute",
+      "VolumeMute",
+      "Mute",
+      "m",
+      "M",
+    ]);
+
+    /*
+     * Common embedded Smart TV key codes:
+     *
+     * 13     Enter / OK
+     * 23     Select on some WebOS/browser implementations
+     * 33/34  Page Up / Page Down
+     * 173    Browser/media mute
+     * 174    Browser/media volume down
+     * 175    Browser/media volume up
+     * 415    Play
+     * 427    Samsung/Tizen channel up
+     * 428    Samsung/Tizen channel down
+     * 447    Samsung/Tizen volume up
+     * 448    Samsung/Tizen volume down
+     * 449    Samsung/Tizen mute
+     * 461    Back on some TV platforms
+     * 10009  Samsung/Tizen return key
+     */
     const nextChannelCodes = new Set([33, 427]);
     const previousChannelCodes = new Set([34, 428]);
+    const okCodes = new Set([13, 23, 48, 415]);
+    const backCodes = new Set([27, 461, 10009]);
+    const volumeUpCodes = new Set([175, 447]);
+    const volumeDownCodes = new Set([174, 448]);
+    const muteCodes = new Set([173, 449]);
 
     if (
       this.activeAlert &&
       (
-        ["Enter", "Escape", " ", "Back", "BrowserBack"].includes(key) ||
-        [13, 27, 10009, 461].includes(keyCode)
+        okKeys.has(key) ||
+        backKeys.has(key) ||
+        key === " " ||
+        okCodes.has(keyCode) ||
+        backCodes.has(keyCode)
       )
     ) {
       event.preventDefault();
+      event.stopPropagation();
       this.dismissAlert();
+      return;
+    }
+
+    if (
+      okKeys.has(key) ||
+      okCodes.has(keyCode)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.showControlOsd(
+        "ok",
+        "OK",
+        this.video.muted ? 0 : this.video.volume,
+      );
       return;
     }
 
@@ -112,6 +191,7 @@ class RCAPlayer {
       nextChannelCodes.has(keyCode)
     ) {
       event.preventDefault();
+      event.stopPropagation();
       this.tune(this.currentChannelIndex + 1);
       return;
     }
@@ -121,33 +201,37 @@ class RCAPlayer {
       previousChannelCodes.has(keyCode)
     ) {
       event.preventDefault();
+      event.stopPropagation();
       this.tune(this.currentChannelIndex - 1);
       return;
     }
 
     if (
-      ["ArrowRight", "AudioVolumeUp", "+", "="].includes(key) ||
-      [175, 447].includes(keyCode)
+      volumeUpKeys.has(key) ||
+      volumeUpCodes.has(keyCode)
     ) {
       event.preventDefault();
+      event.stopPropagation();
       this.changeVolume(0.1);
       return;
     }
 
     if (
-      ["ArrowLeft", "AudioVolumeDown", "-", "_"].includes(key) ||
-      [174, 448].includes(keyCode)
+      volumeDownKeys.has(key) ||
+      volumeDownCodes.has(keyCode)
     ) {
       event.preventDefault();
+      event.stopPropagation();
       this.changeVolume(-0.1);
       return;
     }
 
     if (
-      ["AudioVolumeMute", "m", "M"].includes(key) ||
-      [173, 449].includes(keyCode)
+      muteKeys.has(key) ||
+      muteCodes.has(keyCode)
     ) {
       event.preventDefault();
+      event.stopPropagation();
       this.toggleMute();
       return;
     }
@@ -212,8 +296,10 @@ class RCAPlayer {
     this.video.muted = false;
     this.video.volume = Math.min(
       1,
-      Math.max(0, this.video.volume + delta),
+      Math.max(0, Number((this.video.volume + delta).toFixed(2))),
     );
+
+    this.safePlay();
 
     this.showControlOsd(
       delta > 0 ? "volume-up" : "volume-down",
@@ -224,6 +310,10 @@ class RCAPlayer {
 
   toggleMute() {
     this.video.muted = !this.video.muted;
+
+    if (!this.video.muted) {
+      this.safePlay();
+    }
 
     this.showControlOsd(
       this.video.muted ? "mute" : "volume-up",
@@ -241,6 +331,7 @@ class RCAPlayer {
       "volume-up": "◖)))",
       "volume-down": "◖))",
       mute: "◖×",
+      ok: "✓",
     };
 
     this.controlIcon.textContent = icons[icon] || "◖";
