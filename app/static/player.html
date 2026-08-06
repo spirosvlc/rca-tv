@@ -9,13 +9,21 @@
 </head>
 <body class="player-body">
   <main id="tv">
-    <video id="video" autoplay playsinline></video>
+    <video id="video" autoplay muted playsinline preload="auto"></video>
     <div class="scanlines"></div>
     <div id="static" class="static hidden"></div>
 
     <div id="channelBug" class="channel-bug hidden">
       <strong id="channelNumber"></strong>
       <span id="channelName"></span>
+    </div>
+
+    <div id="controlOsd" class="control-osd hidden" aria-live="polite">
+      <div id="controlIcon" class="control-icon"></div>
+      <div id="controlLabel" class="control-label"></div>
+      <div class="volume-meter">
+        <div id="volumeMeterFill" class="volume-meter-fill"></div>
+      </div>
     </div>
 
     <div id="emptyState" class="empty-state">

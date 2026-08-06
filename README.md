@@ -7,7 +7,9 @@ It is designed to run on a Raspberry Pi connected to an old CRT television throu
 ## Features
 
 - Local video folders as TV channels
+- Native folder picker for local media
 - Remote M3U playlists and HLS streams
+- GitHub `blob` playlist URL conversion
 - Full-screen retro TV player
 - CRT scanlines and static channel transitions
 - Three emergency alert levels
@@ -134,7 +136,9 @@ Restart the RCA application after changing the Telegram configuration.
 - `ArrowUp` or `PageUp`: next channel
 - `ArrowDown` or `PageDown`: previous channel
 - `Enter`, `Space`, or `Escape`: dismiss alert
-- `M`: mute
+- `M` or media mute key: mute
+- `ArrowRight` or media volume-up key: volume up
+- `ArrowLeft` or media volume-down key: volume down
 - `F`: fullscreen
 
 ## Docker

@@ -56,6 +56,7 @@ class M3UImporter:
     )
 
     async def import_entries(self, source: str) -> list[PlaylistEntry]:
+        source = self.normalize_source_url(source)
         self._validate_http_url(source)
 
         async with httpx.AsyncClient(
@@ -124,6 +125,30 @@ class M3UImporter:
             pending_title = ""
 
         return entries
+
+    @staticmethod
+    def normalize_source_url(source: str) -> str:
+        """
+        Converts common GitHub file-page URLs to raw file URLs.
+
+        Example:
+        https://github.com/Free-TV/IPTV/blob/master/playlist.m3u8
+        becomes:
+        https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8
+        """
+        parsed = urlparse(source)
+
+        if parsed.netloc.lower() == "github.com":
+            parts = [part for part in parsed.path.split("/") if part]
+            if len(parts) >= 5 and parts[2] == "blob":
+                owner, repository, _, branch, *file_parts = parts
+                raw_path = "/".join(file_parts)
+                return (
+                    f"https://raw.githubusercontent.com/"
+                    f"{owner}/{repository}/{branch}/{raw_path}"
+                )
+
+        return source
 
     @staticmethod
     def _validate_http_url(source: str) -> None:

@@ -6,6 +6,10 @@ class RCAPlayer {
     this.emptyState = document.querySelector("#emptyState");
     this.channelNumber = document.querySelector("#channelNumber");
     this.channelName = document.querySelector("#channelName");
+    this.controlOsd = document.querySelector("#controlOsd");
+    this.controlIcon = document.querySelector("#controlIcon");
+    this.controlLabel = document.querySelector("#controlLabel");
+    this.volumeMeterFill = document.querySelector("#volumeMeterFill");
 
     this.channels = [];
     this.currentChannelIndex = 0;
@@ -14,6 +18,12 @@ class RCAPlayer {
     this.activeAlert = null;
     this.hls = null;
     this.previousVolume = 1;
+    this.hasUserInteraction = false;
+    this.osdTimer = null;
+
+    // Browsers permit reliable autoplay when media starts muted.
+    this.video.muted = true;
+    this.video.autoplay = true;
   }
 
   async boot() {
@@ -54,6 +64,8 @@ class RCAPlayer {
   }
 
   handleKey(event) {
+    this.registerUserInteraction();
+
     if (
       this.activeAlert &&
       ["Enter", "Escape", " "].includes(event.key)
@@ -70,13 +82,112 @@ class RCAPlayer {
       this.tune(this.currentChannelIndex - 1);
     }
 
-    if (event.key.toLowerCase() === "m") {
-      this.video.muted = !this.video.muted;
+    if (
+      ["ArrowRight", "AudioVolumeUp", "+", "="].includes(event.key)
+    ) {
+      event.preventDefault();
+      this.changeVolume(0.1);
+    }
+
+    if (
+      ["ArrowLeft", "AudioVolumeDown", "-", "_"].includes(event.key)
+    ) {
+      event.preventDefault();
+      this.changeVolume(-0.1);
+    }
+
+    if (
+      ["AudioVolumeMute", "m", "M"].includes(event.key)
+    ) {
+      event.preventDefault();
+      this.toggleMute();
     }
 
     if (event.key.toLowerCase() === "f") {
       document.documentElement.requestFullscreen?.();
     }
+  }
+
+  registerUserInteraction() {
+    if (this.hasUserInteraction) {
+      return;
+    }
+
+    this.hasUserInteraction = true;
+    this.video.muted = false;
+
+    if (this.video.paused) {
+      this.safePlay();
+    }
+  }
+
+  async safePlay() {
+    try {
+      await this.video.play();
+      return true;
+    } catch (error) {
+      if (error?.name === "NotAllowedError") {
+        // Retry muted. The first remote/key interaction will restore sound.
+        this.video.muted = true;
+        try {
+          await this.video.play();
+          return true;
+        } catch (mutedError) {
+          console.error("Muted autoplay failed:", mutedError);
+        }
+      } else if (error?.name !== "AbortError") {
+        console.error("Video playback failed:", error);
+      }
+      return false;
+    }
+  }
+
+
+  changeVolume(delta) {
+    this.video.muted = false;
+    this.video.volume = Math.min(
+      1,
+      Math.max(0, this.video.volume + delta),
+    );
+
+    this.showControlOsd(
+      delta > 0 ? "volume-up" : "volume-down",
+      `VOLUME ${Math.round(this.video.volume * 100)}`,
+      this.video.volume,
+    );
+  }
+
+  toggleMute() {
+    this.video.muted = !this.video.muted;
+
+    this.showControlOsd(
+      this.video.muted ? "mute" : "volume-up",
+      this.video.muted
+        ? "MUTE"
+        : `VOLUME ${Math.round(this.video.volume * 100)}`,
+      this.video.muted ? 0 : this.video.volume,
+    );
+  }
+
+  showControlOsd(icon, label, level) {
+    window.clearTimeout(this.osdTimer);
+
+    const icons = {
+      "volume-up": "◖)))",
+      "volume-down": "◖))",
+      mute: "◖×",
+    };
+
+    this.controlIcon.textContent = icons[icon] || "◖";
+    this.controlLabel.textContent = label;
+    this.volumeMeterFill.style.width =
+      `${Math.round(Math.max(0, Math.min(1, level)) * 100)}%`;
+
+    this.controlOsd.classList.remove("hidden");
+    this.osdTimer = window.setTimeout(
+      () => this.controlOsd.classList.add("hidden"),
+      2000,
+    );
   }
 
   tune(index) {
@@ -140,16 +251,29 @@ class RCAPlayer {
       item.media_url.includes(".m3u8") &&
       window.Hls?.isSupported()
     ) {
-      this.hls = new Hls();
+      this.hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+      });
+
       this.hls.loadSource(item.media_url);
       this.hls.attachMedia(this.video);
+
       this.hls.on(
         Hls.Events.MANIFEST_PARSED,
-        () => this.video.play().catch(() => {}),
+        () => this.safePlay(),
+      );
+
+      this.hls.on(
+        Hls.Events.ERROR,
+        (_event, data) => {
+          console.error("HLS playback error:", data);
+        },
       );
     } else {
       this.video.src = item.media_url;
-      this.video.play().catch(() => {});
+      this.video.load();
+      this.safePlay();
     }
   }
 

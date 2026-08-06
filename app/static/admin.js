@@ -3,6 +3,10 @@ class RCAAdmin {
     this.channelForm = document.querySelector("#channelForm");
     this.alertForm = document.querySelector("#alertForm");
     this.settingsForm = document.querySelector("#settingsForm");
+    this.sourceType = this.channelForm.elements.source_type;
+    this.sourceInput = this.channelForm.elements.source;
+    this.folderPickerButton =
+      document.querySelector("#folderPickerButton");
   }
 
   async boot() {
@@ -26,6 +30,18 @@ class RCAAdmin {
       "submit",
       event => this.saveSettings(event),
     );
+
+    this.folderPickerButton.addEventListener(
+      "click",
+      () => this.selectFolder(),
+    );
+
+    this.sourceType.addEventListener(
+      "change",
+      () => this.updateSourceControls(),
+    );
+
+    this.updateSourceControls();
   }
 
   async request(url, options = {}) {
@@ -45,6 +61,36 @@ class RCAAdmin {
     }
 
     return response.status === 204 ? null : response.json();
+  }
+
+
+  updateSourceControls() {
+    const isFolder = this.sourceType.value === "folder";
+    this.folderPickerButton.hidden = !isFolder;
+    this.sourceInput.placeholder = isFolder
+      ? "/media/rca/cartoons"
+      : "https://example.com/playlist.m3u8";
+  }
+
+  async selectFolder() {
+    const status = document.querySelector("#channelStatus");
+    status.textContent = "Opening folder picker…";
+
+    try {
+      const result = await this.request(
+        "/api/channels/select-folder",
+        { method: "POST" },
+      );
+
+      if (result.path) {
+        this.sourceInput.value = result.path;
+        status.textContent = "Folder selected.";
+      } else {
+        status.textContent = "Folder selection cancelled.";
+      }
+    } catch (error) {
+      status.textContent = error.message;
+    }
   }
 
   async loadChannels() {

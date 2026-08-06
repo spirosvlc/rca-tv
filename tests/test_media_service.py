@@ -39,3 +39,16 @@ def test_hls_manifest_is_detected_by_tags():
         "#EXTM3U\n#EXT-X-TARGETDURATION:6\nsegment-1.ts",
         "https://cdn.example.com/live/manifest",
     )
+
+
+
+def test_github_blob_url_is_converted_to_raw():
+    source = (
+        "https://github.com/Free-TV/IPTV/"
+        "blob/master/playlist.m3u8"
+    )
+
+    assert M3UImporter.normalize_source_url(source) == (
+        "https://raw.githubusercontent.com/"
+        "Free-TV/IPTV/master/playlist.m3u8"
+    )

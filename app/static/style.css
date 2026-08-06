@@ -210,3 +210,77 @@ textarea { min-height: 110px; resize: vertical; }
   .admin-header { align-items: start; gap: 20px; flex-direction: column; }
   .row { grid-template-columns: 1fr; }
 }
+
+
+.control-osd {
+  position: absolute;
+  z-index: 25;
+  left: 5vw;
+  bottom: 8vh;
+  min-width: 260px;
+  padding: 18px 22px;
+  color: #7dff65;
+  background: rgba(0, 20, 0, .78);
+  border: 3px solid #7dff65;
+  box-shadow:
+    inset 0 0 18px rgba(125, 255, 101, .16),
+    0 0 18px rgba(125, 255, 101, .2);
+  font-family: "Courier New", monospace;
+  text-shadow: 0 0 8px rgba(125, 255, 101, .8);
+}
+
+.control-icon {
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -6px;
+  line-height: 1;
+}
+
+.control-label {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.volume-meter {
+  height: 12px;
+  margin-top: 12px;
+  border: 2px solid #7dff65;
+  background: rgba(125, 255, 101, .08);
+}
+
+.volume-meter-fill {
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(
+      to right,
+      #7dff65 0 9px,
+      transparent 9px 13px
+    );
+  transition: width .08s linear;
+}
+
+.source-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.button.compact {
+  padding: 11px 14px;
+  white-space: nowrap;
+}
+
+.field-help {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+@media (max-width: 620px) {
+  .source-input-row {
+    grid-template-columns: 1fr;
+  }
+}

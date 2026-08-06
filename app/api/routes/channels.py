@@ -9,6 +9,7 @@ from app.domain.schemas import (
     ChannelCreatedResponse,
     ChannelResponse,
 )
+from app.services.folder_picker_service import FolderPickerService
 from app.services.channel_service import (
     ChannelNotFoundError,
     ChannelService,
@@ -16,6 +17,12 @@ from app.services.channel_service import (
 )
 
 router = APIRouter(prefix="/channels", tags=["channels"])
+
+
+@router.post("/select-folder")
+def select_folder():
+    selected = FolderPickerService().select_folder()
+    return {"path": selected}
 
 
 @router.get("", response_model=list[ChannelResponse])

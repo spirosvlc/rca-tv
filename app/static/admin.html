@@ -36,7 +36,24 @@
         </label>
 
         <label>Folder path or M3U URL
-          <input name="source" required placeholder="/media/rca/cartoons">
+          <div class="source-input-row">
+            <input
+              id="channelSource"
+              name="source"
+              required
+              placeholder="/media/rca/cartoons or https://..."
+            >
+            <button
+              id="folderPickerButton"
+              class="button compact secondary"
+              type="button"
+            >
+              Choose folder
+            </button>
+          </div>
+          <small class="field-help">
+            GitHub file-page URLs are automatically converted to raw playlists.
+          </small>
         </label>
 
         <label>Logo URL
