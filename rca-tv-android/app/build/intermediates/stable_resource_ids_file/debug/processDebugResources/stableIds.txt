@@ -1,0 +1,6 @@
+gr.rcatv.client:xml/network_security_config = 0x7f050000
+gr.rcatv.client:style/Theme.RcaTv = 0x7f040000
+gr.rcatv.client:string/default_rca_url = 0x7f030001
+gr.rcatv.client:mipmap/ic_launcher = 0x7f020000
+gr.rcatv.client:string/app_name = 0x7f030000
+gr.rcatv.client:drawable/tv_banner = 0x7f010000

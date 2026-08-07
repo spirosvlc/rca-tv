@@ -1,0 +1,73 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="gr.rcatv.client"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="23"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:4:5-67
+11-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:4:22-64
+12
+13    <uses-feature
+13-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:6:5-8:35
+14        android:name="android.software.leanback"
+14-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:7:9-49
+15        android:required="true" />
+15-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:8:9-32
+16    <uses-feature
+16-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:10:5-12:36
+17        android:name="android.hardware.touchscreen"
+17-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:11:9-52
+18        android:required="false" />
+18-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:12:9-33
+19
+20    <application
+20-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:14:5-36:19
+21        android:allowBackup="true"
+21-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:15:9-35
+22        android:banner="@drawable/tv_banner"
+22-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:16:9-45
+23        android:debuggable="true"
+24        android:extractNativeLibs="false"
+25        android:icon="@mipmap/ic_launcher"
+25-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:17:9-43
+26        android:label="@string/app_name"
+26-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:18:9-41
+27        android:testOnly="true"
+28        android:theme="@style/Theme.RcaTv"
+28-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:19:9-43
+29        android:usesCleartextTraffic="true" >
+29-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:20:9-44
+30        <activity
+30-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:22:9-35:20
+31            android:name="gr.rcatv.client.MainActivity"
+31-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:23:13-41
+32            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|smallestScreenSize|uiMode"
+32-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:24:13-120
+33            android:exported="true"
+33-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:25:13-36
+34            android:launchMode="singleTask"
+34-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:26:13-44
+35            android:screenOrientation="landscape" >
+35-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:27:13-50
+36            <intent-filter>
+36-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:29:13-34:29
+37                <action android:name="android.intent.action.MAIN" />
+37-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:30:17-69
+37-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:30:25-66
+38
+39                <category android:name="android.intent.category.LAUNCHER" />
+39-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:32:17-77
+39-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:32:27-74
+40                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+40-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:33:17-86
+40-->/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/AndroidManifest.xml:33:27-83
+41            </intent-filter>
+42        </activity>
+43    </application>
+44
+45</manifest>

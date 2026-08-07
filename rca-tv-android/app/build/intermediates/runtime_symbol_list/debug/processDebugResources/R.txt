@@ -1,0 +1,6 @@
+int drawable tv_banner 0x7f010000
+int mipmap ic_launcher 0x7f020000
+int string app_name 0x7f030000
+int string default_rca_url 0x7f030001
+int style Theme_RcaTv 0x7f040000
+int xml network_security_config 0x7f050000

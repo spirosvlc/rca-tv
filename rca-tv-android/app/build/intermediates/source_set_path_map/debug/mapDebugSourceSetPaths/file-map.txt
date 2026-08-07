@@ -1,0 +1,7 @@
+gr.rcatv.client.app-pngs-0 /Users/spirosvlachos/Downloads/rca-tv-android/app/build/generated/res/pngs/debug
+gr.rcatv.client.app-resValues-1 /Users/spirosvlachos/Downloads/rca-tv-android/app/build/generated/res/resValues/debug
+gr.rcatv.client.app-packageDebugResources-2 /Users/spirosvlachos/Downloads/rca-tv-android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+gr.rcatv.client.app-packageDebugResources-3 /Users/spirosvlachos/Downloads/rca-tv-android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+gr.rcatv.client.app-debug-4 /Users/spirosvlachos/Downloads/rca-tv-android/app/build/intermediates/merged_res/debug/mergeDebugResources
+gr.rcatv.client.app-debug-5 /Users/spirosvlachos/Downloads/rca-tv-android/app/src/debug/res
+gr.rcatv.client.app-main-6 /Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/res
