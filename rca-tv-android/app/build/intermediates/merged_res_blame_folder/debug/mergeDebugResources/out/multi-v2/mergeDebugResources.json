@@ -4,24 +4,24 @@
             "outputFile": "gr.rcatv.client.app-debug-4:/values_values.arsc.flat",
             "map": [
                 {
-                    "source": "/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/res/values/strings.xml",
+                    "source": "/Users/spirosvlachos/RCA-TV/RCA-TV/rca-tv-android/app/src/main/res/values/strings.xml",
                     "from": {
                         "startLines": "1,2",
                         "startColumns": "4,4",
                         "startOffsets": "16,60",
-                        "endColumns": "43,69",
-                        "endOffsets": "55,125"
+                        "endColumns": "43,70",
+                        "endOffsets": "55,126"
                     },
                     "to": {
                         "startLines": "2,3",
                         "startColumns": "4,4",
                         "startOffsets": "55,99",
-                        "endColumns": "43,69",
-                        "endOffsets": "94,164"
+                        "endColumns": "43,70",
+                        "endOffsets": "94,165"
                     }
                 },
                 {
-                    "source": "/Users/spirosvlachos/Downloads/rca-tv-android/app/src/main/res/values/styles.xml",
+                    "source": "/Users/spirosvlachos/RCA-TV/RCA-TV/rca-tv-android/app/src/main/res/values/styles.xml",
                     "from": {
                         "startLines": "1",
                         "startColumns": "4",
@@ -33,10 +33,10 @@
                     "to": {
                         "startLines": "4",
                         "startColumns": "4",
-                        "startOffsets": "169",
+                        "startOffsets": "170",
                         "endLines": "14",
                         "endColumns": "12",
-                        "endOffsets": "796"
+                        "endOffsets": "797"
                     }
                 }
             ]

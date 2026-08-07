@@ -6,6 +6,8 @@ class RCAPlayer {
     this.emptyState = document.querySelector("#emptyState");
     this.channelNumber = document.querySelector("#channelNumber");
     this.channelName = document.querySelector("#channelName");
+    this.channelNumberEntry = document.querySelector("#channelNumberEntry");
+    this.channelNumberEntryValue = document.querySelector("#channelNumberEntryValue");
     this.controlOsd = document.querySelector("#controlOsd");
     this.controlIcon = document.querySelector("#controlIcon");
     this.controlLabel = document.querySelector("#controlLabel");
@@ -22,6 +24,8 @@ class RCAPlayer {
     this.hasUserInteraction = false;
     this.osdTimer = null;
     this.keyDebugTimer = null;
+    this.channelEntryTimer = null;
+    this.channelEntryBuffer = "";
 
     // Browsers permit reliable autoplay when media starts muted.
     this.video.muted = true;
@@ -67,87 +71,32 @@ class RCAPlayer {
 
   handleKey(event) {
     this.registerUserInteraction();
-    this.showKeyDebug(event);
 
     const key = event.key || "";
-    const code = event.code || "";
     const keyCode = event.keyCode || event.which || 0;
 
     const nextChannelKeys = new Set([
-      "ArrowUp",
-      "PageUp",
-      "ChannelUp",
-      "MediaTrackNext",
-      "TVChannelUp",
+      "ArrowUp", "PageUp", "ChannelUp", "MediaTrackNext", "TVChannelUp",
     ]);
-
     const previousChannelKeys = new Set([
-      "ArrowDown",
-      "PageDown",
-      "ChannelDown",
-      "MediaTrackPrevious",
-      "TVChannelDown",
+      "ArrowDown", "PageDown", "ChannelDown", "MediaTrackPrevious", "TVChannelDown",
     ]);
-
     const okKeys = new Set([
-      "Enter",
-      "Accept",
-      "Select",
-      "OK",
-      "MediaPlayPause",
-      "0",
+      "Enter", "Accept", "Select", "OK", "MediaPlayPause", "0",
     ]);
-
     const backKeys = new Set([
-      "Escape",
-      "Back",
-      "BrowserBack",
-      "GoBack",
-      "Exit",
+      "Escape", "Back", "BrowserBack", "GoBack", "Exit",
     ]);
-
     const volumeUpKeys = new Set([
-      "ArrowRight",
-      "AudioVolumeUp",
-      "VolumeUp",
-      "+",
-      "=",
+      "ArrowRight", "AudioVolumeUp", "VolumeUp", "+", "=",
     ]);
-
     const volumeDownKeys = new Set([
-      "ArrowLeft",
-      "AudioVolumeDown",
-      "VolumeDown",
-      "-",
-      "_",
+      "ArrowLeft", "AudioVolumeDown", "VolumeDown", "-", "_",
     ]);
-
     const muteKeys = new Set([
-      "AudioVolumeMute",
-      "VolumeMute",
-      "Mute",
-      "m",
-      "M",
+      "AudioVolumeMute", "VolumeMute", "Mute", "m", "M",
     ]);
 
-    /*
-     * Common embedded Smart TV key codes:
-     *
-     * 13     Enter / OK
-     * 23     Select on some WebOS/browser implementations
-     * 33/34  Page Up / Page Down
-     * 173    Browser/media mute
-     * 174    Browser/media volume down
-     * 175    Browser/media volume up
-     * 415    Play
-     * 427    Samsung/Tizen channel up
-     * 428    Samsung/Tizen channel down
-     * 447    Samsung/Tizen volume up
-     * 448    Samsung/Tizen volume down
-     * 449    Samsung/Tizen mute
-     * 461    Back on some TV platforms
-     * 10009  Samsung/Tizen return key
-     */
     const nextChannelCodes = new Set([33, 427]);
     const previousChannelCodes = new Set([34, 428]);
     const okCodes = new Set([13, 23, 48, 415]);
@@ -172,64 +121,42 @@ class RCAPlayer {
       return;
     }
 
-    if (
-      okKeys.has(key) ||
-      okCodes.has(keyCode)
-    ) {
+    if (/^[1-9]$/.test(key)) {
       event.preventDefault();
       event.stopPropagation();
-      this.showControlOsd(
-        "ok",
-        "OK",
-        this.video.muted ? 0 : this.video.volume,
-      );
+      this.showChannelNumberEntry(key);
       return;
     }
 
-    if (
-      nextChannelKeys.has(key) ||
-      nextChannelCodes.has(keyCode)
-    ) {
+    if (nextChannelKeys.has(key) || nextChannelCodes.has(keyCode)) {
       event.preventDefault();
       event.stopPropagation();
       this.tune(this.currentChannelIndex + 1);
       return;
     }
 
-    if (
-      previousChannelKeys.has(key) ||
-      previousChannelCodes.has(keyCode)
-    ) {
+    if (previousChannelKeys.has(key) || previousChannelCodes.has(keyCode)) {
       event.preventDefault();
       event.stopPropagation();
       this.tune(this.currentChannelIndex - 1);
       return;
     }
 
-    if (
-      volumeUpKeys.has(key) ||
-      volumeUpCodes.has(keyCode)
-    ) {
+    if (volumeUpKeys.has(key) || volumeUpCodes.has(keyCode)) {
       event.preventDefault();
       event.stopPropagation();
       this.changeVolume(0.1);
       return;
     }
 
-    if (
-      volumeDownKeys.has(key) ||
-      volumeDownCodes.has(keyCode)
-    ) {
+    if (volumeDownKeys.has(key) || volumeDownCodes.has(keyCode)) {
       event.preventDefault();
       event.stopPropagation();
       this.changeVolume(-0.1);
       return;
     }
 
-    if (
-      muteKeys.has(key) ||
-      muteCodes.has(keyCode)
-    ) {
+    if (muteKeys.has(key) || muteCodes.has(keyCode)) {
       event.preventDefault();
       event.stopPropagation();
       this.toggleMute();
@@ -238,23 +165,34 @@ class RCAPlayer {
 
     if (key.toLowerCase() === "f") {
       document.documentElement.requestFullscreen?.();
+      return;
     }
+
+    this.showKeyDebug(event);
   }
 
-  showKeyDebug(event) {
-    const key = event.key || "unknown";
-    const code = event.code || "none";
-    const keyCode = event.keyCode || event.which || 0;
+  showChannelNumberEntry(digit) {
+    window.clearTimeout(this.channelEntryTimer);
 
-    this.keyDebug.textContent =
-      `KEY ${key} · CODE ${code} · ${keyCode}`;
-    this.keyDebug.classList.remove("hidden");
+    this.channelEntryBuffer += digit;
+    this.channelEntryBuffer = this.channelEntryBuffer.slice(-3);
 
-    window.clearTimeout(this.keyDebugTimer);
-    this.keyDebugTimer = window.setTimeout(
-      () => this.keyDebug.classList.add("hidden"),
-      2000,
-    );
+    this.channelNumberEntryValue.textContent = this.channelEntryBuffer;
+    this.channelNumberEntry.classList.remove("hidden");
+
+    this.channelEntryTimer = window.setTimeout(() => {
+      const requestedNumber = Number.parseInt(this.channelEntryBuffer, 10);
+      const targetIndex = this.channels.findIndex(
+        channel => channel.number === requestedNumber,
+      );
+
+      if (targetIndex >= 0) {
+        this.tune(targetIndex);
+      }
+
+      this.channelEntryBuffer = "";
+      this.channelNumberEntry.classList.add("hidden");
+    }, 1400);
   }
 
   registerUserInteraction() {
@@ -495,20 +433,28 @@ class RCAPlayer {
     const AudioContext =
       window.AudioContext || window.webkitAudioContext;
     const context = new AudioContext();
-    const oscillator = context.createOscillator();
-    const gain = context.createGain();
 
-    oscillator.type = "square";
-    oscillator.frequency.value = 853;
-    gain.gain.value = 0.08;
+    const startTime = context.currentTime;
+    const totalDuration = 10;
+    const pulseDuration = 0.55;
+    const gapDuration = 0.25;
+    let cursor = 0;
 
-    oscillator.connect(gain).connect(context.destination);
-    oscillator.start();
+    while (cursor < totalDuration) {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "square";
+      oscillator.frequency.value = 853;
+      gain.gain.setValueAtTime(0.08, startTime + cursor);
+      gain.gain.setValueAtTime(0.08, startTime + cursor + pulseDuration - 0.02);
+      gain.gain.linearRampToValueAtTime(0, startTime + cursor + pulseDuration);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start(startTime + cursor);
+      oscillator.stop(startTime + cursor + pulseDuration);
+      cursor += pulseDuration + gapDuration;
+    }
 
-    window.setTimeout(() => {
-      oscillator.stop();
-      context.close();
-    }, 1100);
+    window.setTimeout(() => context.close(), (totalDuration + 1) * 1000);
   }
 }
 

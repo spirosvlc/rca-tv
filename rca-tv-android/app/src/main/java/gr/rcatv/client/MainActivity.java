@@ -34,8 +34,10 @@ public final class MainActivity extends Activity {
     private static final String PREF_SERVER_URL = "server_url";
 
     private WebView webView;
+    private TextView staticView;
     private TextView statusView;
     private SharedPreferences preferences;
+    private AlertDialog serverDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,35 +61,54 @@ public final class MainActivity extends Activity {
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
 
+        staticView = new TextView(this);
+        staticView.setTextColor(Color.WHITE);
+        staticView.setBackgroundColor(Color.BLACK);
+        staticView.setTextSize(16);
+        staticView.setGravity(Gravity.FILL);
+        staticView.setText(generateStaticText());
+        staticView.setVisibility(View.GONE);
+        root.addView(staticView, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ));
+
         webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
         webView.setFocusable(true);
         webView.setFocusableInTouchMode(true);
-
         configureWebView();
-
-        FrameLayout.LayoutParams webParams = new FrameLayout.LayoutParams(
+        root.addView(webView, new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
-        );
-        root.addView(webView, webParams);
+        ));
 
         statusView = new TextView(this);
         statusView.setTextColor(Color.rgb(125, 255, 101));
-        statusView.setBackgroundColor(Color.argb(220, 0, 20, 0));
+        statusView.setBackgroundColor(Color.argb(225, 0, 20, 0));
         statusView.setTextSize(22);
         statusView.setGravity(Gravity.CENTER);
         statusView.setPadding(36, 24, 36, 24);
         statusView.setVisibility(View.GONE);
-
-        FrameLayout.LayoutParams statusParams = new FrameLayout.LayoutParams(
+        root.addView(statusView, new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             Gravity.CENTER
-        );
-        root.addView(statusView, statusParams);
-
+        ));
         setContentView(root);
+    }
+
+    private String generateStaticText() {
+        StringBuilder builder = new StringBuilder();
+        String[] noise = new String[] {
+            "░▒▓▒░▓░▒▓░▒░▓▒▓░▒▓▒░▓▒░▒▓░",
+            "▓░▒▒▓░▓▒░░▓▒▒░▓░▒▓▒░░▓▒▓▒",
+            "▒▓░░▒▓▒▓░▒▓░░▒▓▒░▓░▒▒▓░▒▓"
+        };
+        for (int i = 0; i < 80; i++) {
+            builder.append(noise[i % noise.length]).append("\\n");
+        }
+        return builder.toString();
     }
 
     private void configureWebView() {
@@ -129,6 +150,7 @@ public final class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 hideStatus();
+                hideStatic();
                 view.requestFocus();
             }
 
@@ -139,6 +161,7 @@ public final class MainActivity extends Activity {
                 WebResourceError error
             ) {
                 if (request.isForMainFrame()) {
+                    showStatic();
                     showStatus(
                         "RCA SERVER NOT AVAILABLE\n"
                             + "Press MENU, or hold 0, to change the address."
@@ -155,6 +178,7 @@ public final class MainActivity extends Activity {
             .putString(PREF_SERVER_URL, normalizedUrl)
             .apply();
 
+        showStatic();
         showStatus("CONNECTING TO RCA TV…");
         webView.loadUrl(normalizedUrl);
     }
@@ -170,50 +194,53 @@ public final class MainActivity extends Activity {
     }
 
     private void showServerDialog(boolean mandatory) {
+        if (serverDialog != null && serverDialog.isShowing()) return;
+
         EditText input = new EditText(this);
         input.setSingleLine(true);
-        input.setText(
-            preferences.getString(
-                PREF_SERVER_URL,
-                getString(R.string.default_rca_url)
-            )
-        );
+        input.setText(preferences.getString(PREF_SERVER_URL, getString(R.string.default_rca_url)));
         input.setSelectAllOnFocus(true);
+        input.setTextSize(20);
+        input.setPadding(18, 18, 18, 18);
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
+        FrameLayout container = new FrameLayout(this);
+        container.setPadding(24, 8, 24, 8);
+        container.addView(input, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
+
+        serverDialog = new AlertDialog.Builder(this)
             .setTitle("RCA TV server")
-            .setMessage(
-                "Enter your Mac/server address, for example:\n"
-                    + "http://192.168.1.45:8080"
-            )
-            .setView(input)
+            .setMessage("Enter your Mac/server address, for example:\\nhttp://192.168.1.45:8080")
+            .setView(container)
             .setPositiveButton("CONNECT", null)
-            .setNegativeButton(
-                mandatory ? "EXIT" : "CANCEL",
-                (currentDialog, which) -> {
-                    if (mandatory) {
-                        finish();
-                    }
-                }
-            )
+            .setNegativeButton(mandatory ? "EXIT" : "CANCEL", (currentDialog, which) -> {
+                if (mandatory) finish();
+            })
             .create();
 
-        dialog.setOnShowListener(ignored -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                .setOnClickListener(view -> {
-                    String value = input.getText().toString().trim();
-
-                    if (value.isEmpty()) {
-                        input.setError("Enter the RCA TV server address");
-                        return;
-                    }
-
-                    dialog.dismiss();
-                    openRcaServer(value);
-                });
+        serverDialog.setCanceledOnTouchOutside(false);
+        serverDialog.setOnCancelListener(dialog -> { if (mandatory) finish(); });
+        serverDialog.setOnShowListener(ignored -> {
+            serverDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                String value = input.getText().toString().trim();
+                if (value.isEmpty()) {
+                    input.setError("Enter the RCA TV server address");
+                    return;
+                }
+                serverDialog.dismiss();
+                serverDialog = null;
+                openRcaServer(value);
+            });
         });
-
-        dialog.show();
+        serverDialog.setOnDismissListener(dialog -> serverDialog = null);
+        serverDialog.show();
+        if (serverDialog.getWindow() != null) {
+            serverDialog.getWindow().setSoftInputMode(
+                android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            );
+        }
         input.requestFocus();
     }
 
@@ -224,6 +251,16 @@ public final class MainActivity extends Activity {
         }
 
         int keyCode = event.getKeyCode();
+
+        if (serverDialog != null && serverDialog.isShowing() && keyCode == KeyEvent.KEYCODE_BACK) {
+            View focused = serverDialog.getCurrentFocus();
+            if (focused != null) {
+                android.view.inputmethod.InputMethodManager imm =
+                    (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(focused.getWindowToken(), 0);
+            }
+            return true;
+        }
 
         // Long press 0 reopens the server settings.
         if (
@@ -251,9 +288,18 @@ public final class MainActivity extends Activity {
             case KeyEvent.KEYCODE_ENTER:
             case KeyEvent.KEYCODE_NUMPAD_ENTER:
             case KeyEvent.KEYCODE_0:
-                // RCA web player already treats numeric 0 as OK.
                 sendWebKey("0", 48);
                 return true;
+
+            case KeyEvent.KEYCODE_1: sendWebKey("1", 49); return true;
+            case KeyEvent.KEYCODE_2: sendWebKey("2", 50); return true;
+            case KeyEvent.KEYCODE_3: sendWebKey("3", 51); return true;
+            case KeyEvent.KEYCODE_4: sendWebKey("4", 52); return true;
+            case KeyEvent.KEYCODE_5: sendWebKey("5", 53); return true;
+            case KeyEvent.KEYCODE_6: sendWebKey("6", 54); return true;
+            case KeyEvent.KEYCODE_7: sendWebKey("7", 55); return true;
+            case KeyEvent.KEYCODE_8: sendWebKey("8", 56); return true;
+            case KeyEvent.KEYCODE_9: sendWebKey("9", 57); return true;
 
             case KeyEvent.KEYCODE_VOLUME_UP:
                 sendWebKey("AudioVolumeUp", 447);
@@ -307,6 +353,23 @@ public final class MainActivity extends Activity {
         );
 
         webView.evaluateJavascript(javascript, null);
+    }
+
+    private void showStatic() {
+        runOnUiThread(() -> {
+            if (staticView != null) {
+                staticView.setText(generateStaticText());
+                staticView.setVisibility(View.VISIBLE);
+            }
+            if (webView != null) webView.setVisibility(View.INVISIBLE);
+        });
+    }
+
+    private void hideStatic() {
+        runOnUiThread(() -> {
+            if (staticView != null) staticView.setVisibility(View.GONE);
+            if (webView != null) webView.setVisibility(View.VISIBLE);
+        });
     }
 
     private void showStatus(String message) {
