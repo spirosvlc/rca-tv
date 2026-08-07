@@ -206,7 +206,7 @@ A minimal Android TV application that opens the RCA TV Python server in a fullsc
 On first launch enter:
 
 ```text
-http://YOUR_MAC_IP:8080
+http://YOUR_IP:8080
 ```
 
 For example:
@@ -214,8 +214,6 @@ For example:
 ```text
 http://192.168.1.45:8080
 ```
-
-Your Android TV and Mac must be connected to the same network. The RCA Python server must listen on `0.0.0.0`, not only on `127.0.0.1`.
 
 ## Build with Android Studio on macOS
 
