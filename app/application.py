@@ -5,6 +5,7 @@ from app.api.routes.alerts import router as alerts_router
 from app.api.routes.channels import router as channels_router
 from app.api.routes.pages import router as pages_router
 from app.api.routes.settings import router as settings_router
+from app.api.routes.youtube import router as youtube_router
 from app.core.config import get_settings
 from app.core.lifespan import application_lifespan
 
@@ -22,6 +23,15 @@ class ApplicationFactory:
             lifespan=application_lifespan,
         )
 
+        @application.middleware("http")
+        async def disable_player_cache(request, call_next):
+            response = await call_next(request)
+            if request.url.path == "/" or request.url.path.startswith("/static/"):
+                response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+                response.headers["Pragma"] = "no-cache"
+                response.headers["Expires"] = "0"
+            return response
+
         application.mount(
             "/static",
             StaticFiles(directory="app/static"),
@@ -32,5 +42,6 @@ class ApplicationFactory:
         application.include_router(channels_router, prefix="/api")
         application.include_router(alerts_router, prefix="/api")
         application.include_router(settings_router, prefix="/api")
+        application.include_router(youtube_router, prefix="/api")
 
         return application

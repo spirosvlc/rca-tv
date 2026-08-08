@@ -32,10 +32,11 @@
           <select name="source_type">
             <option value="folder">Local folder</option>
             <option value="m3u">M3U URL</option>
+            <option value="youtube">YouTube subscriptions</option>
           </select>
         </label>
 
-        <label>Folder path or M3U URL
+        <label>Source
           <div class="source-input-row">
             <input
               id="channelSource"
@@ -52,7 +53,7 @@
             </button>
           </div>
           <small class="field-help">
-            GitHub file-page URLs are automatically converted to raw playlists.
+            For YouTube, connect your Google account below and select creators.
           </small>
         </label>
 
@@ -125,6 +126,38 @@
 
         <button class="button" type="submit">Save configuration</button>
         <p id="settingsStatus" class="status"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>News & weather ticker</h2>
+      <form id="broadcastSettingsForm">
+        <label class="check"><input name="news_enabled" type="checkbox"> Enable hourly Greek news ticker</label>
+        <label>RSS URL<input name="news_rss_url" value="https://www.ertnews.gr/feed/"></label>
+        <div class="row"><label>Show every (min)<input name="news_interval_minutes" type="number" value="60" min="15"></label><label>Headlines<input name="news_headlines" type="number" value="5" min="1" max="15"></label></div>
+        <div class="divider"></div>
+        <label class="check"><input name="emy_enabled" type="checkbox"> Enable EMY advisories</label>
+        <label>EMY / MeteoAlarm feed<input name="emy_warnings_url" value="https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-greece"></label>
+        <label>Warning area / region<input name="emy_region" value="Attica" placeholder="Attica"></label>
+        <div class="row"><label>Check every (min)<input name="emy_interval_minutes" type="number" value="15" min="5"></label><label>Repeat warning (min)<input name="emy_repeat_minutes" type="number" value="60" min="15"></label></div>
+        <button class="button" type="submit">Save broadcast feeds</button>
+        <button id="testWeatherTicker" class="button secondary" type="button">Test weather ticker</button>
+        <p id="broadcastStatus" class="status"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>YouTube account</h2>
+      <form id="youtubeSettingsForm">
+        <label>Google OAuth Client ID<input name="youtube_client_id"></label>
+        <label>Google OAuth Client Secret<input name="youtube_client_secret" type="password"></label>
+        <label>Redirect URI<input name="youtube_redirect_uri" value="http://127.0.0.1:8080/api/youtube/callback"></label>
+        <label>Videos per creator<input name="youtube_videos_per_creator" type="number" value="3" min="1" max="10"></label>
+        <button class="button" type="submit">Save YouTube settings</button>
+        <button id="youtubeConnect" class="button secondary" type="button">Connect Google account</button>
+        <button id="youtubeLoadSubs" class="button secondary" type="button">Load subscriptions</button>
+        <div id="youtubeSubscriptions" class="subscription-list"></div>
+        <p id="youtubeStatus" class="status"></p>
       </form>
     </section>
   </main>

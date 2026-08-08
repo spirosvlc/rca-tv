@@ -8,8 +8,10 @@ from app.domain.schemas import (
     ChannelCreate,
     ChannelCreatedResponse,
     ChannelResponse,
+    NowPlayingResponse,
 )
 from app.services.folder_picker_service import FolderPickerService
+from app.services.broadcast_service import BroadcastService
 from app.services.channel_service import (
     ChannelNotFoundError,
     ChannelService,
@@ -52,6 +54,15 @@ async def create_channel(
         id=channel.id,
         items_imported=item_count,
     )
+
+
+@router.get("/{channel_id}/now", response_model=NowPlayingResponse)
+def now_playing(channel_id:int, session:DatabaseSession):
+    try:
+        channel,item,offset,live=BroadcastService(session).now(channel_id)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND,str(exc)) from exc
+    return NowPlayingResponse(channel_id=channel.id,channel_number=channel.number,channel_name=channel.name,item=item,offset_seconds=offset,live=live)
 
 
 @router.post("/{channel_id}/scan")

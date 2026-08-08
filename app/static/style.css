@@ -376,3 +376,18 @@ textarea { min-height: 110px; resize: vertical; }
   text-shadow: 0 0 8px rgba(125,255,101,.9);
   box-shadow: inset 0 0 16px rgba(125,255,101,.12), 0 0 14px rgba(125,255,101,.2);
 }
+
+.youtube-layer { position:absolute; inset:0; width:100%; height:100%; background:#000; z-index:2; }
+.youtube-player { width:100%; height:100%; background:#000; }
+.youtube-player iframe { width:100%; height:100%; border:0; display:block; }
+.ticker-window { overflow:hidden; white-space:nowrap; min-width:0; }
+.ticker-text {
+  display:inline-block;
+  width:max-content;
+  max-width:none;
+  white-space:nowrap !important;
+  flex:none;
+  will-change:transform;
+}
+.subscription-list { display:grid; gap:8px; max-height:320px; overflow:auto; padding:8px 0; }
+.subscription-row { padding:8px; border:1px solid #333; border-radius:8px; }

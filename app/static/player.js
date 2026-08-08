@@ -1,7 +1,9 @@
+console.info("RCA PLAYER v0.3.7 - no fixed medium timeout");
 class RCAPlayer {
   constructor() {
     this.video = document.querySelector("#video");
     this.staticLayer = document.querySelector("#static");
+    this.youtubeLayer = document.querySelector("#youtubeLayer");
     this.channelBug = document.querySelector("#channelBug");
     this.emptyState = document.querySelector("#emptyState");
     this.channelNumber = document.querySelector("#channelNumber");
@@ -19,7 +21,14 @@ class RCAPlayer {
     this.currentItemIndex = 0;
     this.latestAlertId = 0;
     this.activeAlert = null;
+    this.alertAudioContext = null;
+    this.alertToneNodes = [];
+    this.alertToneCloseTimer = null;
     this.hls = null;
+    this.youtubePlayer = null;
+    this.youtubeReady = false;
+    this.currentMediaKind = "video";
+    this.itemEndTimer = null;
     this.previousVolume = 1;
     this.hasUserInteraction = false;
     this.osdTimer = null;
@@ -232,12 +241,10 @@ class RCAPlayer {
 
   changeVolume(delta) {
     this.video.muted = false;
-    this.video.volume = Math.min(
-      1,
-      Math.max(0, Number((this.video.volume + delta).toFixed(2))),
-    );
-
-    this.safePlay();
+    this.video.volume = Math.min(1, Math.max(0, Number((this.video.volume + delta).toFixed(2))));
+    if (this.currentMediaKind === "youtube" && this.youtubePlayer?.setVolume) {
+      this.youtubePlayer.unMute(); this.youtubePlayer.setVolume(Math.round(this.video.volume*100));
+    } else { this.safePlay(); }
 
     this.showControlOsd(
       delta > 0 ? "volume-up" : "volume-down",
@@ -248,10 +255,9 @@ class RCAPlayer {
 
   toggleMute() {
     this.video.muted = !this.video.muted;
-
-    if (!this.video.muted) {
-      this.safePlay();
-    }
+    if (this.currentMediaKind === "youtube" && this.youtubePlayer) {
+      if (this.video.muted) this.youtubePlayer.mute(); else { this.youtubePlayer.unMute(); this.youtubePlayer.setVolume(Math.round(this.video.volume*100)); }
+    } else if (!this.video.muted) { this.safePlay(); }
 
     this.showControlOsd(
       this.video.muted ? "mute" : "volume-up",
@@ -284,25 +290,90 @@ class RCAPlayer {
     );
   }
 
-  tune(index) {
+  async tune(index) {
     this.currentChannelIndex =
       (index + this.channels.length) % this.channels.length;
-    this.currentItemIndex = 0;
-
     const channel = this.channels[this.currentChannelIndex];
-
     this.showStatic();
-    this.channelNumber.textContent =
-      String(channel.number).padStart(2, "0");
+    this.channelNumber.textContent = String(channel.number).padStart(2, "0");
     this.channelName.textContent = channel.name;
-
     this.channelBug.classList.remove("hidden");
-    window.setTimeout(
-      () => this.channelBug.classList.add("hidden"),
-      2500,
-    );
+    window.setTimeout(() => this.channelBug.classList.add("hidden"), 2500);
 
-    this.playCurrentItem();
+    try {
+      const now = await this.request(`/api/channels/${channel.id}/now`);
+      await this.playNow(now);
+    } catch (error) {
+      console.error("Could not tune channel:", error);
+    }
+  }
+
+  async playNow(now) {
+    window.clearTimeout(this.itemEndTimer);
+    if (!now.item) { this.stopPlayers(); return; }
+    const item=now.item;
+    if (item.media_kind === "youtube") {
+      await this.playYouTube(item, now.offset_seconds || 0);
+    } else {
+      this.playVideoItem(item, now.offset_seconds || 0, now.live);
+    }
+    if (!now.live && item.duration_seconds > 0) {
+      const remaining=Math.max(1,item.duration_seconds-(now.offset_seconds || 0));
+      this.itemEndTimer=window.setTimeout(() => this.tune(this.currentChannelIndex), remaining*1000+500);
+    }
+  }
+
+  stopPlayers() {
+    if (this.hls) { this.hls.destroy(); this.hls=null; }
+    this.video.pause(); this.video.classList.add("hidden");
+    this.youtubeLayer.classList.add("hidden");
+    if (this.youtubePlayer?.stopVideo) this.youtubePlayer.stopVideo();
+  }
+
+  playVideoItem(item, offset=0, live=false) {
+    this.currentMediaKind="video";
+    if (this.youtubePlayer?.stopVideo) {
+      try { this.youtubePlayer.stopVideo(); } catch (_) {}
+    }
+    this.youtubeLayer.classList.add("hidden");
+    this.video.classList.remove("hidden");
+    this.video.style.visibility = "visible";
+    if (this.hls) { this.hls.destroy(); this.hls=null; }
+    const afterReady=() => {
+      if (!live && offset>0) { try { this.video.currentTime=offset; } catch(_){} }
+      this.safePlay();
+    };
+    if (item.media_url.includes(".m3u8") && window.Hls?.isSupported()) {
+      this.hls=new Hls({enableWorker:true,lowLatencyMode:true});
+      this.hls.loadSource(item.media_url); this.hls.attachMedia(this.video);
+      this.hls.on(Hls.Events.MANIFEST_PARSED, afterReady);
+    } else {
+      this.video.src=item.media_url; this.video.load();
+      this.video.onloadedmetadata=afterReady;
+    }
+  }
+
+  async ensureYouTubePlayer(videoId, offset) {
+    for (let i=0;i<50 && !(window.YT && YT.Player);i++) await new Promise(r=>setTimeout(r,100));
+    if (!(window.YT && YT.Player)) throw new Error("YouTube API did not load");
+    if (!this.youtubePlayer) {
+      this.youtubePlayer=new YT.Player("youtubePlayer", {
+        width:"100%",height:"100%",videoId,
+        playerVars:{autoplay:1,controls:0,disablekb:1,rel:0,playsinline:1,start:Math.floor(offset)},
+        events:{onReady:(e)=>{this.youtubeReady=true;e.target.seekTo(offset,true);e.target.playVideo();},onStateChange:(e)=>{if(e.data===YT.PlayerState.ENDED)this.tune(this.currentChannelIndex);}}
+      });
+    } else {
+      this.youtubePlayer.loadVideoById({videoId,startSeconds:offset});
+    }
+  }
+
+  async playYouTube(item, offset=0) {
+    this.currentMediaKind="youtube";
+    if (this.hls) { this.hls.destroy(); this.hls=null; }
+    this.video.pause();
+    this.video.classList.add("hidden");
+    this.youtubeLayer.classList.remove("hidden");
+    await this.ensureYouTubePlayer(item.provider_id, offset);
   }
 
   showStatic(duration = 600) {
@@ -313,63 +384,9 @@ class RCAPlayer {
     );
   }
 
-  playNextItem() {
-    const channel = this.channels[this.currentChannelIndex];
-    if (!channel?.items.length) {
-      return;
-    }
+  playNextItem() { this.tune(this.currentChannelIndex); }
 
-    this.currentItemIndex =
-      (this.currentItemIndex + 1) % channel.items.length;
-    this.playCurrentItem();
-  }
-
-  playCurrentItem() {
-    const channel = this.channels[this.currentChannelIndex];
-
-    if (!channel.items.length) {
-      this.video.removeAttribute("src");
-      this.video.load();
-      return;
-    }
-
-    const item =
-      channel.items[this.currentItemIndex % channel.items.length];
-
-    if (this.hls) {
-      this.hls.destroy();
-      this.hls = null;
-    }
-
-    if (
-      item.media_url.includes(".m3u8") &&
-      window.Hls?.isSupported()
-    ) {
-      this.hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-      });
-
-      this.hls.loadSource(item.media_url);
-      this.hls.attachMedia(this.video);
-
-      this.hls.on(
-        Hls.Events.MANIFEST_PARSED,
-        () => this.safePlay(),
-      );
-
-      this.hls.on(
-        Hls.Events.ERROR,
-        (_event, data) => {
-          console.error("HLS playback error:", data);
-        },
-      );
-    } else {
-      this.video.src = item.media_url;
-      this.video.load();
-      this.safePlay();
-    }
-  }
+  playCurrentItem() { this.tune(this.currentChannelIndex); }
 
   async checkAlerts() {
     const alert = await this.request(
@@ -390,8 +407,11 @@ class RCAPlayer {
     const element = document.querySelector(
       `#${alert.level}Alert`,
     );
-    element.querySelector(".alert-message").textContent =
-      alert.message;
+    const alertMessageElement = element.querySelector(".alert-message");
+    const normalizedMessage = alert.level === "medium"
+      ? alert.message.replace(/\s*\n+\s*/g, "  •  ").replace(/\s{2,}/g, " ").trim()
+      : alert.message;
+    alertMessageElement.textContent = normalizedMessage;
     element.classList.remove("hidden");
 
     if (alert.level === "critical") {
@@ -404,10 +424,62 @@ class RCAPlayer {
     }
 
     if (alert.level === "medium") {
-      window.setTimeout(
-        () => this.dismissAlert(),
-        12000,
-      );
+      const tickerWindow = element.querySelector(".ticker-window");
+      const tickerText = element.querySelector(".ticker-text");
+
+      // RCA old-TV crawl: no duration and no precomputed finish time.
+      // Move the text at a fixed physical speed and dismiss only when the
+      // rendered right edge of the text has actually left the ticker window.
+      if (this.mediumTickerAnimation) {
+        this.mediumTickerAnimation.cancel();
+        this.mediumTickerAnimation = null;
+      }
+      if (this.mediumTickerRaf) {
+        window.cancelAnimationFrame(this.mediumTickerRaf);
+        this.mediumTickerRaf = null;
+      }
+
+      window.requestAnimationFrame(() => {
+        const pixelsPerSecond = 58;
+        const windowRect = tickerWindow.getBoundingClientRect();
+        let x = tickerWindow.clientWidth + 24;
+        let previousTimestamp = null;
+
+        tickerText.style.transform = `translate3d(${x}px, 0, 0)`;
+
+        const crawl = (timestamp) => {
+          if (this.activeAlert?.id !== alert.id) {
+            this.mediumTickerRaf = null;
+            return;
+          }
+
+          if (previousTimestamp !== null) {
+            const elapsedSeconds = Math.min(
+              0.05,
+              (timestamp - previousTimestamp) / 1000,
+            );
+            x -= pixelsPerSecond * elapsedSeconds;
+            tickerText.style.transform = `translate3d(${x}px, 0, 0)`;
+          }
+          previousTimestamp = timestamp;
+
+          const textRect = tickerText.getBoundingClientRect();
+
+          // Only dismiss after the final character is completely past the
+          // left boundary of the visible ticker area.
+          if (textRect.right <= windowRect.left) {
+            this.mediumTickerRaf = null;
+            if (this.activeAlert?.id === alert.id) {
+              this.dismissAlert();
+            }
+            return;
+          }
+
+          this.mediumTickerRaf = window.requestAnimationFrame(crawl);
+        };
+
+        this.mediumTickerRaf = window.requestAnimationFrame(crawl);
+      });
     }
   }
 
@@ -416,9 +488,20 @@ class RCAPlayer {
       return;
     }
 
+    if (this.mediumTickerAnimation) {
+      this.mediumTickerAnimation.cancel();
+      this.mediumTickerAnimation = null;
+    }
+    if (this.mediumTickerRaf) {
+      window.cancelAnimationFrame(this.mediumTickerRaf);
+      this.mediumTickerRaf = null;
+    }
+
     document
       .querySelectorAll(".alert")
       .forEach(element => element.classList.add("hidden"));
+
+    this.stopAlertTone();
 
     await this.request(
       `/api/alerts/${this.activeAlert.id}/dismiss`,
@@ -429,10 +512,32 @@ class RCAPlayer {
     this.video.volume = this.previousVolume;
   }
 
+  stopAlertTone() {
+    if (this.alertToneCloseTimer) {
+      window.clearTimeout(this.alertToneCloseTimer);
+      this.alertToneCloseTimer = null;
+    }
+
+    for (const node of this.alertToneNodes) {
+      try { node.oscillator.stop(); } catch (_) {}
+      try { node.oscillator.disconnect(); } catch (_) {}
+      try { node.gain.disconnect(); } catch (_) {}
+    }
+    this.alertToneNodes = [];
+
+    if (this.alertAudioContext) {
+      try { this.alertAudioContext.close(); } catch (_) {}
+      this.alertAudioContext = null;
+    }
+  }
+
   playAlertTone() {
+    this.stopAlertTone();
+
     const AudioContext =
       window.AudioContext || window.webkitAudioContext;
     const context = new AudioContext();
+    this.alertAudioContext = context;
 
     const startTime = context.currentTime;
     const totalDuration = 10;
@@ -451,11 +556,15 @@ class RCAPlayer {
       oscillator.connect(gain).connect(context.destination);
       oscillator.start(startTime + cursor);
       oscillator.stop(startTime + cursor + pulseDuration);
+      this.alertToneNodes.push({ oscillator, gain });
       cursor += pulseDuration + gapDuration;
     }
 
-    window.setTimeout(() => context.close(), (totalDuration + 1) * 1000);
-  }
-}
+    this.alertToneCloseTimer = window.setTimeout(() => {
+      if (this.alertAudioContext === context) {
+        this.stopAlertTone();
+      }
+    }, (totalDuration + 1) * 1000);
+  }}
 
 new RCAPlayer().boot();

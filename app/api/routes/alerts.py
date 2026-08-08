@@ -22,6 +22,17 @@ def create_alert(
     return {"id": alert.id}
 
 
+@router.post("/test-weather", status_code=status.HTTP_201_CREATED)
+def test_weather_alert(session: DatabaseSession):
+    alert = AlertService(session).create(
+        AlertCreate(
+            level="medium",
+            message="[ΕΜΥ TEST • ΑΤΤΙΚΗ]  Δοκιμαστική προειδοποίηση καιρού για την περιοχή της Αττικής • Ισχυρές βροχές και καταιγίδες κατά τόπους. Αυτό είναι δοκιμαστικό μήνυμα RCA TV.",
+        )
+    )
+    return {"id": alert.id, "ok": True}
+
+
 @router.get("/latest", response_model=AlertResponse | None)
 def latest_alert(
     session: DatabaseSession,

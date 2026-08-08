@@ -5,7 +5,7 @@ from app.domain.schemas import SettingsUpdate
 
 
 class SettingsService:
-    SECRET_KEYS = {"telegram_token"}
+    SECRET_KEYS = {"telegram_token", "youtube_client_secret", "youtube_access_token", "youtube_refresh_token", "youtube_oauth_state"}
 
     def __init__(self, session: Session) -> None:
         self.repository = SettingsRepository(session)
@@ -20,8 +20,12 @@ class SettingsService:
     def get_value(self, key: str, default: str = "") -> str:
         return self.repository.get(key, default)
 
+    def set_value(self, key: str, value: str) -> None:
+        self.repository.set(key, str(value))
+        self.repository.save()
+
     def update(self, payload: SettingsUpdate) -> None:
-        for key, value in payload.model_dump().items():
+        for key, value in payload.model_dump(exclude_none=True).items():
             if key in self.SECRET_KEYS and value == "":
                 continue
 

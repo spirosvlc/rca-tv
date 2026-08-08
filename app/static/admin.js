@@ -3,6 +3,8 @@ class RCAAdmin {
     this.channelForm = document.querySelector("#channelForm");
     this.alertForm = document.querySelector("#alertForm");
     this.settingsForm = document.querySelector("#settingsForm");
+    this.broadcastSettingsForm = document.querySelector("#broadcastSettingsForm");
+    this.youtubeSettingsForm = document.querySelector("#youtubeSettingsForm");
     this.sourceType = this.channelForm.elements.source_type;
     this.sourceInput = this.channelForm.elements.source;
     this.folderPickerButton =
@@ -10,6 +12,7 @@ class RCAAdmin {
   }
 
   async boot() {
+    document.querySelector("#testWeatherTicker")?.addEventListener("click", () => this.testWeatherTicker());
     this.bindEvents();
     await Promise.all([
       this.loadChannels(),
@@ -41,6 +44,10 @@ class RCAAdmin {
       () => this.updateSourceControls(),
     );
 
+    this.broadcastSettingsForm.addEventListener("submit", event => this.saveExtraSettings(event, this.broadcastSettingsForm, "broadcastStatus"));
+    this.youtubeSettingsForm.addEventListener("submit", event => this.saveExtraSettings(event, this.youtubeSettingsForm, "youtubeStatus"));
+    document.querySelector("#youtubeConnect").addEventListener("click", () => this.connectYouTube());
+    document.querySelector("#youtubeLoadSubs").addEventListener("click", () => this.loadYouTubeSubscriptions());
     this.updateSourceControls();
   }
 
@@ -66,10 +73,12 @@ class RCAAdmin {
 
   updateSourceControls() {
     const isFolder = this.sourceType.value === "folder";
+    const isYouTube = this.sourceType.value === "youtube";
     this.folderPickerButton.hidden = !isFolder;
+    this.sourceInput.readOnly = isYouTube;
     this.sourceInput.placeholder = isFolder
       ? "/media/rca/cartoons"
-      : "https://example.com/playlist.m3u8";
+      : isYouTube ? "Select YouTube subscriptions below" : "https://example.com/playlist.m3u8";
   }
 
   async selectFolder() {
@@ -195,10 +204,8 @@ class RCAAdmin {
     const values = await this.request("/api/settings");
 
     for (const [key, value] of Object.entries(values)) {
-      const input = this.settingsForm.elements[key];
-      if (!input) {
-        continue;
-      }
+      const input = this.settingsForm.elements[key] || this.broadcastSettingsForm?.elements[key] || this.youtubeSettingsForm?.elements[key];
+      if (!input) continue;
 
       if (input.type === "checkbox") {
         input.checked = value === "true";
@@ -232,6 +239,60 @@ class RCAAdmin {
     } catch (error) {
       status.textContent = error.message;
     }
+  }
+
+  async saveExtraSettings(event, form, statusId) {
+    event.preventDefault();
+    const current = await this.request("/api/settings");
+    const fd = new FormData(form);
+    const data = {...current};
+    for (const el of form.elements) {
+      if (!el.name) continue;
+      if (el.type === "checkbox") data[el.name] = el.checked;
+      else if (el.type === "number") data[el.name] = Number(el.value);
+      else data[el.name] = el.value;
+    }
+    // Restore secrets if blank: backend keeps existing secret values.
+    await this.request("/api/settings", {method:"PUT", body:JSON.stringify(data)});
+    document.querySelector(`#${statusId}`).textContent = "Saved.";
+  }
+
+  async testWeatherTicker() {
+    const status=document.querySelector("#broadcastStatus");
+    try {
+      await this.request("/api/alerts/test-weather", {method:"POST"});
+      status.textContent="Test weather ticker sent to the TV.";
+    } catch(error) { status.textContent=error.message; }
+  }
+
+  async connectYouTube() {
+    const status=document.querySelector("#youtubeStatus");
+    try {
+      const result=await this.request("/api/youtube/auth-url");
+      window.location.href=result.url;
+    } catch(error) { status.textContent=error.message; }
+  }
+
+  async loadYouTubeSubscriptions() {
+    const status=document.querySelector("#youtubeStatus");
+    try {
+      const subs=await this.request("/api/youtube/subscriptions");
+      const box=document.querySelector("#youtubeSubscriptions"); box.innerHTML="";
+      subs.forEach(sub => {
+        const label=document.createElement("label"); label.className="check subscription-row";
+        label.innerHTML=`<input type="checkbox" value="${this.escapeHtml(sub.channel_id)}"><span>${this.escapeHtml(sub.title)}</span>`;
+        label.querySelector("input").addEventListener("change", () => this.applyYouTubeSelection());
+        box.appendChild(label);
+      });
+      status.textContent=`Loaded ${subs.length} subscriptions. Select creators, then add a YouTube channel above.`;
+    } catch(error) { status.textContent=error.message; }
+  }
+
+  applyYouTubeSelection() {
+    const ids=[...document.querySelectorAll("#youtubeSubscriptions input:checked")].map(x=>x.value);
+    this.sourceInput.value=JSON.stringify(ids);
+    if (ids.length) this.sourceType.value="youtube";
+    this.updateSourceControls();
   }
 
   escapeHtml(value) {

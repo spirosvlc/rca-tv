@@ -4,12 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>RCA Project</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=0.3.7">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body class="player-body">
   <main id="tv">
     <video id="video" autoplay muted playsinline preload="auto"></video>
+    <div id="youtubeLayer" class="youtube-layer hidden"><div id="youtubePlayer" class="youtube-player"></div></div>
     <div class="scanlines"></div>
     <div id="static" class="static hidden"></div>
 
@@ -40,7 +42,7 @@
 
     <section id="mediumAlert" class="alert medium hidden">
       <span class="alert-label">RCA INFO</span>
-      <span class="alert-message"></span>
+      <span class="ticker-window"><span class="alert-message ticker-text"></span></span>
     </section>
 
     <section id="seriousAlert" class="alert serious hidden">
@@ -60,6 +62,6 @@
       </div>
     </section>
   </main>
-  <script src="/static/player.js"></script>
+  <script src="/static/player.js?v=0.3.7"></script>
 </body>
 </html>
