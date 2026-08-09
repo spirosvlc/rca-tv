@@ -80,14 +80,30 @@ class M3UImporter:
 
     @classmethod
     def is_hls_manifest(cls, content: str, source: str = "") -> bool:
-        parsed_path = urlparse(source).path.lower()
-        if parsed_path.endswith(".m3u8"):
+        """Distinguish a true HLS manifest from an IPTV channel list.
+
+        Some public IPTV lists use a .m3u8 filename even though they contain
+        many #EXTINF station entries. A true HLS manifest is identified by
+        HLS-specific #EXT-X-* tags, not by the filename alone.
+        """
+        lines = [line.strip() for line in content.splitlines() if line.strip()]
+
+        if any(line.startswith(cls.HLS_TAG_PREFIXES) for line in lines):
             return True
 
-        return any(
-            line.strip().startswith(cls.HLS_TAG_PREFIXES)
-            for line in content.splitlines()
-        )
+        # Multiple EXTINF records are a traditional IPTV playlist even when
+        # the URL happens to end in .m3u8.
+        extinf_count = sum(1 for line in lines if line.startswith("#EXTINF:"))
+        if extinf_count > 1:
+            return False
+
+        # A single EXTINF without any HLS tags is also treated as an M3U list
+        # so it can be imported normally.
+        if extinf_count == 1:
+            return False
+
+        # Extension is only a fallback for minimal/odd HLS manifests.
+        return urlparse(source).path.lower().endswith(".m3u8")
 
     @staticmethod
     def parse(

@@ -14,7 +14,10 @@ class ChannelResponse(BaseModel):
     model_config=ConfigDict(from_attributes=True)
     id:int; number:int; name:str; source_type:ChannelSourceType; source:str; logo_url:str|None; enabled:bool; broadcast_epoch:datetime|None=None; items:list[ChannelItemResponse]
 
-class ChannelCreatedResponse(BaseModel): id:int; items_imported:int
+class ChannelCreatedResponse(BaseModel):
+    id:int
+    items_imported:int
+    channels_created:int=1
 
 class NowPlayingResponse(BaseModel):
     channel_id:int; channel_number:int; channel_name:str; item:ChannelItemResponse|None; offset_seconds:float=0; live:bool=False

@@ -44,7 +44,7 @@ async def create_channel(
     service = ChannelService(session)
 
     try:
-        channel, item_count = await service.create_channel(payload)
+        channel, item_count, channels_created = await service.create_channel(payload)
     except DuplicateChannelNumberError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     except ValueError as exc:
@@ -53,6 +53,7 @@ async def create_channel(
     return ChannelCreatedResponse(
         id=channel.id,
         items_imported=item_count,
+        channels_created=channels_created,
     )
 
 

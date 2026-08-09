@@ -176,7 +176,7 @@ class RCAAdmin {
       });
 
       status.textContent =
-        `Channel added. Imported ${result.items_imported} items.`;
+        `Added ${result.channels_created || 1} RCA channel${(result.channels_created || 1) === 1 ? "" : "s"}. Imported ${result.items_imported} stream${result.items_imported === 1 ? "" : "s"}.`;
 
       this.channelForm.reset();
       await this.loadChannels();

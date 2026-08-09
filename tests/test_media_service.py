@@ -27,10 +27,23 @@ videos/comedy.mp4
     ]
 
 
-def test_hls_manifest_is_detected_by_extension():
+def test_hls_manifest_is_detected_by_hls_tags_even_with_m3u8_extension():
     assert M3UImporter.is_hls_manifest(
         "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=3200000\nchunk.m3u8",
         "https://cdn.example.com/live/playlist.m3u8",
+    )
+
+
+def test_multichannel_iptv_m3u8_is_not_mistaken_for_hls():
+    content = """#EXTM3U
+#EXTINF:-1,ERT1
+https://example.com/ert1.m3u8
+#EXTINF:-1,ERT2
+https://example.com/ert2.m3u8
+"""
+    assert not M3UImporter.is_hls_manifest(
+        content,
+        "https://example.com/playlist.m3u8",
     )
 
 
