@@ -1,6 +1,6 @@
-# Analog TV Project
+# RCA Project
 
-Analog TV Project is an open-source retro television appliance built with Python, FastAPI, SQLite, and a lightweight browser UI.
+RCA Project is an open-source retro television appliance built with Python, FastAPI, SQLite, and a lightweight browser UI.
 
 It is designed to run on a Raspberry Pi connected to an old CRT television through an HDMI-to-composite adapter.
 
@@ -30,7 +30,7 @@ It is designed to run on a Raspberry Pi connected to an old CRT television throu
 ## Project structure
 
 ```text
-Analog TV-project/
+RCA-project/
 ├── app/
 │   ├── api/
 │   │   ├── dependencies.py
@@ -69,8 +69,8 @@ Analog TV-project/
 ## Local setup
 
 ```bash
-git clone https://github.com/spirosvlc/Analog TV-tv
-cd Analog TV-tv
+git clone https://github.com/spirosvlc/RCA-tv
+cd RCA-tv
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -92,7 +92,7 @@ Open:
 Create a directory:
 
 ```text
-/media/Analog TV/cartoons/
+/media/RCA/cartoons/
 ├── episode-01.mp4
 ├── episode-02.mp4
 └── episode-03.mp4
@@ -129,7 +129,7 @@ Commands:
 /alert critical Emergency warning. Remain indoors.
 ```
 
-Restart the Analog TV application after changing the Telegram configuration.
+Restart the RCA application after changing the Telegram configuration.
 
 ## Player controls
 
@@ -173,31 +173,31 @@ The player supports standard browser keys and common Smart TV key codes for:
 
 The green key diagnostic at the top displays the key value received from the TV browser. Some television operating systems may still reserve physical volume keys for the TV's global speaker volume before the browser receives them.
 
-# Analog TV TV Android client
+# RCA TV Android client
 
-A minimal Android TV application that opens the Analog TV TV Python server in a fullscreen WebView.
+A minimal Android TV application that opens the RCA TV Python server in a fullscreen WebView.
 
 ## Behavior
 
-- First launch asks for the Analog TV server address.
+- First launch asks for the RCA server address.
 - The address is saved permanently.
-- Later launches open Analog TV TV immediately.
+- Later launches open RCA TV immediately.
 - JavaScript and DOM storage are enabled.
 - Media autoplay does not require a user gesture.
 - HTTP LAN addresses are allowed.
-- Android TV remote events are translated into the keys expected by Analog TV TV.
+- Android TV remote events are translated into the keys expected by RCA TV.
 
 ## Remote controls
 
-| Android TV remote | Analog TV action |
+| Android TV remote | RCA action |
 |---|---|
 | Channel Up / D-pad Up | Next channel |
 | Channel Down / D-pad Down | Previous channel |
-| OK / Enter / 0 | Analog TV OK; dismiss alert |
-| Volume Up | Analog TV volume up and green OSD |
-| Volume Down | Analog TV volume down and green OSD |
-| Mute | Analog TV mute and green OSD |
-| Back | Analog TV back/dismiss |
+| OK / Enter / 0 | RCA OK; dismiss alert |
+| Volume Up | RCA volume up and green OSD |
+| Volume Down | RCA volume down and green OSD |
+| Mute | RCA mute and green OSD |
+| Back | RCA back/dismiss |
 | Menu / Settings | Open server address |
 | Long-press 0 | Open server address |
 
@@ -265,7 +265,7 @@ app/src/main/res/values/strings.xml
 and replace:
 
 ```xml
-<string name="default_Analog TV_url">http://192.168.1.45:8080</string>
+<string name="default_RCA_url">http://192.168.1.45:8080</string>
 ```
 
 The app still asks for the correct address on first launch.
